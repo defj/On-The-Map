@@ -1,15 +1,20 @@
 //
-//  ViewController.swift
+//  LoginViewController.swift
 //  On The Map
 //
-//  Created by Eden Gan on 14/05/2015.
+//  Created by Joshua Gan on 14/05/2015.
 //  Copyright (c) 2015 Threefold Global Pty Ltd. All rights reserved.
 //
 
 import UIKit
 
-class ViewController: UIViewController {
+class LoginViewController: UIViewController {
 
+
+    @IBOutlet weak var usernameField: UITextField!
+    @IBOutlet weak var passwordField: UITextField!
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.

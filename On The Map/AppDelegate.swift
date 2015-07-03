@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  On The Map
 //
-//  Created by Eden Gan on 14/05/2015.
+//  Created by Joshua Gan on 14/05/2015.
 //  Copyright (c) 2015 Threefold Global Pty Ltd. All rights reserved.
 //
 
