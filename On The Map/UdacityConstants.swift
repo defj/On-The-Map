@@ -15,7 +15,7 @@ extension UdacityClient {
         static let Session = "session"
         
         // MARK: User
-        static let User = "user"
+        static let Users = "users"
     }
     
     // MARK: - Parameter Keys
@@ -48,5 +48,10 @@ extension UdacityClient {
         
         // MARK: User
         static let UserKey = "key"
+        
+        // MARK: User
+        static let User = "user"
+        static let UserFirstName = "first_name"
+        static let UserLastName = "last_name"
     }
 }

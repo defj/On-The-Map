@@ -10,5 +10,14 @@ import Foundation
 
 class ParseClient : Client {
 
+    
+    // Mark: - Shared Instance
+    class func sharedInstance() -> ParseClient {
+        struct Singleton {
+            static var sharedInstance = ParseClient()
+        }
+        
+        return Singleton.sharedInstance
+    }
 }
 

@@ -20,10 +20,11 @@ class Client : NSObject {
     
     // MARK: - GET
     
-    func taskForGETMethod(methodURL:String, parameters: [String : AnyObject], completionHandler: (result: AnyObject!, error: NSError?) -> Void) -> NSURLSessionDataTask {
+    func taskForGETMethod(methodURL:String, stripChars: Int, parameters: [String : AnyObject], completionHandler: (result: AnyObject!, error: NSError?) -> Void) -> NSURLSessionDataTask {
 
         /* Build the URL and configure the request */
         let urlString = methodURL + Client.escapedParameters(parameters)
+        println(urlString)
         let url = NSURL(string: urlString)!
         let request = NSURLRequest(URL: url)
         
@@ -35,7 +36,11 @@ class Client : NSObject {
                 let newError = Client.errorForData(data, response: response, error: error)
                 completionHandler(result: nil, error: downloadError)
             } else {
-                Client.parseJSONWithCompletionHandler(data, completionHandler: completionHandler)
+                println("trying to parse GET")
+                /* Strip leading characters if required */
+                let modData = data.subdataWithRange(NSMakeRange(stripChars, data.length - stripChars))
+                /* Complete parse */
+                Client.parseJSONWithCompletionHandler(modData, completionHandler: completionHandler)
             }
         }
         
@@ -72,6 +77,7 @@ class Client : NSObject {
                 let modData = data.subdataWithRange(NSMakeRange(stripChars, data.length - stripChars))
                 /* Complete parse */
                 Client.parseJSONWithCompletionHandler(modData, completionHandler: completionHandler)
+                println("parse complete")
             }
         }
         
@@ -132,14 +138,5 @@ class Client : NSObject {
         }
         
         return (!urlVars.isEmpty ? "?" : "") + join("&", urlVars)
-    }
-    
-    // Mark: - Shared Instance
-    class func sharedInstance() -> Client {
-        struct Singleton {
-            static var sharedInstance = Client()
-        }
-        
-        return Singleton.sharedInstance
     }
 }
