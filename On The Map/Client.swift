@@ -26,7 +26,16 @@ class Client : NSObject {
         let urlString = methodURL + Client.escapedParameters(parameters)
         println(urlString)
         let url = NSURL(string: urlString)!
-        let request = NSURLRequest(URL: url)
+        let request = NSMutableURLRequest(URL: url)
+        
+        /* Add Parse API details if required, use stripChars to identify (5 = Udacity, 0 = Parse), should probably use flag. */
+        if stripChars == 0 {
+            request.addValue(Client.Constants.ParseAppId,
+                forHTTPHeaderField: "X-Parse-Application-Id")
+            request.addValue(Client.Constants.ParseRESTApiKey,
+                forHTTPHeaderField: "X-Parse-REST-API-Key")
+        }
+        request.HTTPMethod = "GET"
         
         /* Make the request */
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
@@ -41,6 +50,7 @@ class Client : NSObject {
                 let modData = data.subdataWithRange(NSMakeRange(stripChars, data.length - stripChars))
                 /* Complete parse */
                 Client.parseJSONWithCompletionHandler(modData, completionHandler: completionHandler)
+                println("GET complete")
             }
         }
         

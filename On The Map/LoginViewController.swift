@@ -20,10 +20,12 @@ class LoginViewController: UIViewController {
     @IBOutlet weak var userMessage: UILabel!
     
     @IBOutlet weak var loginButton: UIButton!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        activityIndicator.hidesWhenStopped = true
     }
 
     override func didReceiveMemoryWarning() {
@@ -35,6 +37,7 @@ class LoginViewController: UIViewController {
     @IBAction func loginButtonTouch(sender: AnyObject) {
         self.loginButton.enabled = false
         self.debugLabel.text = "Connecting ..."
+        self.activityIndicator.startAnimating()
         
         // Error check input
         if (self.usernameField.text == "" ||
@@ -56,9 +59,10 @@ class LoginViewController: UIViewController {
         dispatch_async(dispatch_get_main_queue(), {
             self.debugLabel.text = "Login Success"
             self.loginButton.enabled = true
+            self.activityIndicator.stopAnimating()
             
-//            let controller = self.storyboard!.instantiateViewControllerWithIdentifier("ManagerNavigationController") as! UINavigationController
-//            self.presentViewController(controller, animated: true, completion: nil)
+            let controller = self.storyboard!.instantiateViewControllerWithIdentifier("OTMTabBarController") as! UITabBarController
+            self.presentViewController(controller, animated: true, completion: nil)
         })
         println("login success")
         
@@ -73,6 +77,7 @@ class LoginViewController: UIViewController {
         
         // Reset buttons and fields
         self.loginButton.enabled = true
+        self.activityIndicator.stopAnimating()
     }
 }
 
