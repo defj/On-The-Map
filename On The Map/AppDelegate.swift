@@ -14,8 +14,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     // Temporary Storage of Student Details
-    var activeStudent: OTMStudent?
-    var students: [OTMStudent]?
+    var activeStudent: OTMStudent? = nil
+    var students: [OTMStudent]? = nil
+    var studentOnTheMap: Bool = false
 
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {

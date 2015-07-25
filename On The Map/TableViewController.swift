@@ -7,36 +7,156 @@
 //
 import UIKit
 
-class TableViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class TableViewController: UITableViewController {
+
     var applicationDelegate: AppDelegate?
-    var students: [OTMStudent]?
+    var students: [OTMStudent]!
+    var onTheMap: Bool = false
     
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     //MARK: - Methods
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        applicationDelegate = UIApplication.sharedApplication().delegate as? AppDelegate
-        students = applicationDelegate?.students
+        
+        // Setup Navigation Bar
+        self.navigationItem.title = "On The Map"
+        self.hidesBottomBarWhenPushed = false
+        
+        // Setup Buttons
+        let refreshButton = UIBarButtonItem(barButtonSystemItem: .Refresh, target: self, action: Selector("getStudents"))
+        self.navigationItem.rightBarButtonItem = refreshButton
+        
+//        var pinButton: UIButton = UIButton()
+//        pinButton.setImage(UIImage(named: "Pin"), forState: .Normal)
+//        pinButton.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+//        pinButton.targetForAction(Selector("addPin"), withSender: nil)
+//        let addPinButton = UIBarButtonItem()
+//        addPinButton.customView = pinButton
+        let addPinButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.Add, target: self, action: Selector("addPin"))
+        self.navigationItem.rightBarButtonItems?.append(addPinButton)
+        
+        let cancelButton = UIBarButtonItem(barButtonSystemItem: .Stop, target: self, action: Selector("logout"))
+        self.navigationItem.leftBarButtonItem? = cancelButton
+ 
     }
     
-    override func viewDidAppear(animated: Bool) {
-        students = applicationDelegate?.students
+//    override func viewDidAppear(animated: Bool) {
+//        students = applicationDelegate?.students
+//        println("viewDidAppear")
+//    
+//    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
         
+        // Retrieve stored student information
+        println("viewWillAppear")
+        applicationDelegate = UIApplication.sharedApplication().delegate as? AppDelegate
+        students = applicationDelegate?.students
+        let rows = students?.count
+        println("viewWillAppear count: \(rows)")
+        onTheMap = applicationDelegate!.studentOnTheMap
+        
+        // Reload Data
+        self.tableView?.reloadData()
+    }
+    
+    // MARK: - Helpers
+    
+    // Adds a pin to the Student List
+    func addPin() {
+        if onTheMap {
+            // Already posted a location, in current session only
+            var alert = UIAlertController(title: "", message: "You have already posted a student location. Would you like to overwrite it?", preferredStyle: UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "Overwrite", style: .Default, handler: { (action) -> Void in
+                self.performSegueWithIdentifier("showAddSegue", sender: self)
+            }))
+            alert.addAction(UIAlertAction(title: "Cancel", style: .Default, handler: nil))
+            self.presentViewController(alert, animated: true, completion: nil)
+        } else {
+            // Allow pin to be added
+            var storyboard = UIStoryboard(name: "Main", bundle: nil)
+            var infoPost = storyboard.instantiateViewControllerWithIdentifier("InfoPostingController") as? UINavigationController
+            self.presentViewController(infoPost!, animated: true, completion: nil)
+        }
+    }
+    
+ 
+    // Logs the user out and returns to the login screen.
+    func logout(){
+        let logoutController = presentingViewController as? LoginViewController
+        logoutController?.passwordField.text = ""
+        applicationDelegate?.students = nil
+        applicationDelegate?.activeStudent = nil
+        self.presentingViewController?.dismissViewControllerAnimated(true, completion: nil )
+    }
+    
+    ///
+    /// Populates the OTMStudent data source for the view by getting student locations from Parse
+    func getStudents() {
+        activityIndicator.startAnimating()
+        
+        let client = ParseClient.sharedInstance()
+        // Retrieve student data from Parse
+        println("Getting student details")
+        client.getStudentDetails(){success, students, errorString in
+            if success {
+                if let students = students {
+                    // Store student details in the AppDelegate
+                    println("Storing Details")
+                    if let applicationDelegate = self.applicationDelegate{
+                        var allStudents: [OTMStudent] = [OTMStudent]()
+                        for student in students {
+                            allStudents.append(OTMStudent(dictionary: student))
+                        }
+                        if allStudents.count > 0 {
+                            // Store new student array
+                            applicationDelegate.students = allStudents
+                            
+                            // Refresh TableView
+                            dispatch_async(dispatch_get_main_queue()) {
+                                self.tableView.reloadData()
+                            }
+                        } else {
+                            self.activityIndicator.stopAnimating()
+                        }
+                    }
+                }
+            } else {
+                self.displayAlert("Error", message: errorString, action: "OK")
+            }
+            
+        }
+    }
+    
+    
+    // Display a UIAlert Controller
+    func displayAlert(title: String? , message: String?, action: String) {
+        dispatch_async(dispatch_get_main_queue()){
+            self.activityIndicator.stopAnimating()
+            
+            var alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: action, style: .Default, handler: { action in
+                self.dismissViewControllerAnimated(true, completion: nil)
+            }))
+            self.presentViewController(alert, animated: true, completion: nil)
+        }
     }
     
     //MARK: - TableView Data Source Methods
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
         let cell =
         tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath) as! UITableViewCell
         
-        if let students = self.students{
-            let student = students[indexPath.row]
-            if let firstName = student.firstName, lastName = student.lastName{
+        if let allStudents = self.students {
+            let student = allStudents[indexPath.row]
+            if let firstName = student.firstName, lastName = student.lastName {
                 cell.textLabel?.text = "\(firstName) \(lastName)"
             }
-            if let location = student.mapString{
+            if let location = student.mapString {
                 cell.detailTextLabel?.text = location
             }
             
@@ -45,32 +165,28 @@ class TableViewController: UIViewController, UITableViewDataSource, UITableViewD
         return cell
     }
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if let rows = students?.count{
-            return rows
-        } else {
-            return 0
-        }
+    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return self.students.count
     }
     
     //MARK: - TableView Delegate Methods
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        if let urlString = students![indexPath.row].mediaURL, cell = tableView.cellForRowAtIndexPath(indexPath) {
+    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        if let urlString = self.students![indexPath.row].mediaURL, cell = tableView.cellForRowAtIndexPath(indexPath) {
             cell.detailTextLabel?.text = urlString
         }
     }
     
-    func tableView(tableView: UITableView, didDeselectRowAtIndexPath indexPath: NSIndexPath) {
-        if let students = students{
-            if let mapString = students[indexPath.row].mapString, cell = tableView.cellForRowAtIndexPath(indexPath) {
+    override func tableView(tableView: UITableView, didDeselectRowAtIndexPath indexPath: NSIndexPath) {
+        if let allStudents = self.students {
+            if let mapString = allStudents[indexPath.row].mapString, cell = tableView.cellForRowAtIndexPath(indexPath) {
                 cell.detailTextLabel?.text = mapString
             }
         }
     }
     
-    func tableView(tableView: UITableView, accessoryButtonTappedForRowWithIndexPath indexPath: NSIndexPath) {
-        if let students = students {
-            if let urlString = students[indexPath.row].mediaURL{
+    override func tableView(tableView: UITableView, accessoryButtonTappedForRowWithIndexPath indexPath: NSIndexPath) {
+        if let allStudents = self.students {
+            if let urlString = allStudents[indexPath.row].mediaURL{
                 let app = UIApplication.sharedApplication()
                 if let url = NSURL(string: urlString){
                     if app.canOpenURL(url){

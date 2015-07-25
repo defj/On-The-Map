@@ -11,7 +11,6 @@ import MapKit
 
 class MapViewController: UIViewController, MKMapViewDelegate {
     
-    @IBOutlet weak var mapToolbar: UIToolbar!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var mapView: MKMapView!
     
@@ -25,6 +24,26 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         
         activityIndicator.hidesWhenStopped = true
         mapView.delegate = self
+        
+        // Setup Navigation Bar
+        self.navigationItem.title = "On The Map"
+        self.hidesBottomBarWhenPushed = false
+        
+        // Setup Buttons
+        let refreshButton = UIBarButtonItem(barButtonSystemItem: .Refresh, target: self, action: Selector("getStudents"))
+        self.navigationItem.rightBarButtonItem = refreshButton
+        
+        //        var pinButton: UIButton = UIButton()
+        //        pinButton.setImage(UIImage(named: "Pin"), forState: .Normal)
+        //        pinButton.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+        //        pinButton.targetForAction(Selector("addPin"), withSender: nil)
+        //        let addPinButton = UIBarButtonItem()
+        //        addPinButton.customView = pinButton
+        let addPinButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.Add, target: self, action: Selector("addPin"))
+        self.navigationItem.rightBarButtonItems?.append(addPinButton)
+        
+        let cancelButton = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: Selector("logout"))
+        self.navigationItem.leftBarButtonItem = cancelButton
     }
     
     override func viewDidAppear(animated: Bool) {
@@ -69,6 +88,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             }
             
         }
+        self.activityIndicator.stopAnimating()
     }
         
     func addAnnotationsToMap() {
