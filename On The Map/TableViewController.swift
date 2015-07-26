@@ -28,35 +28,24 @@ class TableViewController: UITableViewController {
         let refreshButton = UIBarButtonItem(barButtonSystemItem: .Refresh, target: self, action: Selector("getStudents"))
         self.navigationItem.rightBarButtonItem = refreshButton
         
-//        var pinButton: UIButton = UIButton()
-//        pinButton.setImage(UIImage(named: "Pin"), forState: .Normal)
-//        pinButton.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-//        pinButton.targetForAction(Selector("addPin"), withSender: nil)
-//        let addPinButton = UIBarButtonItem()
-//        addPinButton.customView = pinButton
-        let addPinButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.Add, target: self, action: Selector("addPin"))
+        var pinImage = UIImage(named: "Pin")
+        pinImage = pinImage?.imageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal)
+        let addPinButton = UIBarButtonItem(image: pinImage, style: UIBarButtonItemStyle.Plain, target: self, action: Selector("addPin"))
         self.navigationItem.rightBarButtonItems?.append(addPinButton)
         
-        let cancelButton = UIBarButtonItem(barButtonSystemItem: .Stop, target: self, action: Selector("logout"))
-        self.navigationItem.leftBarButtonItem? = cancelButton
+        let cancelButton = UIBarButtonItem(title: "Logout", style: UIBarButtonItemStyle.Plain, target: self, action: Selector("logout"))
+        self.navigationItem.leftBarButtonItem = cancelButton
  
     }
     
-//    override func viewDidAppear(animated: Bool) {
-//        students = applicationDelegate?.students
-//        println("viewDidAppear")
-//    
-//    }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
         // Retrieve stored student information
-        println("viewWillAppear")
         applicationDelegate = UIApplication.sharedApplication().delegate as? AppDelegate
         students = applicationDelegate?.students
         let rows = students?.count
-        println("viewWillAppear count: \(rows)")
         onTheMap = applicationDelegate!.studentOnTheMap
         
         // Reload Data
@@ -67,20 +56,11 @@ class TableViewController: UITableViewController {
     
     // Adds a pin to the Student List
     func addPin() {
-        if onTheMap {
-            // Already posted a location, in current session only
-            var alert = UIAlertController(title: "", message: "You have already posted a student location. Would you like to overwrite it?", preferredStyle: UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: "Overwrite", style: .Default, handler: { (action) -> Void in
-                self.performSegueWithIdentifier("showAddSegue", sender: self)
-            }))
-            alert.addAction(UIAlertAction(title: "Cancel", style: .Default, handler: nil))
-            self.presentViewController(alert, animated: true, completion: nil)
-        } else {
-            // Allow pin to be added
-            var storyboard = UIStoryboard(name: "Main", bundle: nil)
-            var infoPost = storyboard.instantiateViewControllerWithIdentifier("InfoPostingController") as? UINavigationController
-            self.presentViewController(infoPost!, animated: true, completion: nil)
-        }
+        // Allow pin to be added
+        onTheMap = true
+        var storyboard = UIStoryboard(name: "Main", bundle: nil)
+        var infoPost = storyboard.instantiateViewControllerWithIdentifier("InfoPostingController") as? UINavigationController
+        self.presentViewController(infoPost!, animated: true, completion: nil)
     }
     
  
@@ -100,12 +80,10 @@ class TableViewController: UITableViewController {
         
         let client = ParseClient.sharedInstance()
         // Retrieve student data from Parse
-        println("Getting student details")
         client.getStudentDetails(){success, students, errorString in
             if success {
                 if let students = students {
                     // Store student details in the AppDelegate
-                    println("Storing Details")
                     if let applicationDelegate = self.applicationDelegate{
                         var allStudents: [OTMStudent] = [OTMStudent]()
                         for student in students {
@@ -125,7 +103,7 @@ class TableViewController: UITableViewController {
                     }
                 }
             } else {
-                self.displayAlert("Error", message: errorString, action: "OK")
+                self.displayAlert("Error", message: errorString, action: "Dismiss")
             }
             
         }

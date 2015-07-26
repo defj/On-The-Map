@@ -59,10 +59,10 @@ class AddLinkViewController: UIViewController, UITextFieldDelegate {
                     var cammera = MKMapCamera(lookingAtCenterCoordinate: coordinate, fromEyeCoordinate: coordinate, eyeAltitude: 10000.0)
                     self.mapView.setCamera(cammera, animated: true)
                 } else {
-                    self.displayAlert("Alert", message: "Invalid location.", action: "OK")
+                    self.displayAlert("Alert", message: "Invalid location.", action: "Dismiss")
                 }
             } else {
-                self.displayAlert("Error", message: "Unable to retrive student data.", action: "OK")
+                self.displayAlert("Error", message: "Unable to retrive student data.", action: "Dismiss")
             }
         }
     }
@@ -78,10 +78,10 @@ class AddLinkViewController: UIViewController, UITextFieldDelegate {
                         self.addLocation()
                 }
             } else {
-                self.displayAlert("Error", message:"Link is invalid", action: "OK")
+                self.displayAlert("Error", message:"Link is invalid", action: "Dismiss")
             }
         } else {
-            self.displayAlert("Error", message:"Please enter a link", action: "OK")
+            self.displayAlert("Error", message:"Please enter a link", action: "Dismiss")
         }
         
     }
@@ -95,9 +95,9 @@ class AddLinkViewController: UIViewController, UITextFieldDelegate {
                 self.presentingViewController?.dismissViewControllerAnimated(true, completion: nil)
             } else {
                 if let errorString = errorString {
-                    self.displayAlert("Error", message: errorString, action: "OK")
+                    self.displayAlert("Error", message: errorString, action: "Dismiss")
                 }else {
-                    self.displayAlert("Error", message:"Failed to add student details", action: "OK")
+                    self.displayAlert("Error", message:"Failed to add student details", action: "Dismiss")
                 }
             }
         }
@@ -118,9 +118,7 @@ class AddLinkViewController: UIViewController, UITextFieldDelegate {
             self.activityIndicator.stopAnimating()
             
             var alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: action, style: .Default, handler: { action in
-                self.dismissViewControllerAnimated(true, completion: nil)
-            }))
+            alert.addAction(UIAlertAction(title: action, style: .Default, handler: nil))
             self.presentViewController(alert, animated: true, completion: nil)
         }
     }

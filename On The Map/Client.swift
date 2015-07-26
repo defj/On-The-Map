@@ -24,7 +24,6 @@ class Client : NSObject {
 
         /* Build the URL and configure the request */
         let urlString = methodURL + Client.escapedParameters(parameters)
-        println(urlString)
         let url = NSURL(string: urlString)!
         let request = NSMutableURLRequest(URL: url)
         
@@ -45,12 +44,10 @@ class Client : NSObject {
                 let newError = Client.errorForData(data, response: response, error: error)
                 completionHandler(result: nil, error: downloadError)
             } else {
-                println("trying to parse GET")
                 /* Strip leading characters if required */
                 let modData = data.subdataWithRange(NSMakeRange(stripChars, data.length - stripChars))
                 /* Complete parse */
                 Client.parseJSONWithCompletionHandler(modData, completionHandler: completionHandler)
-                println("GET complete")
             }
         }
         
@@ -71,6 +68,13 @@ class Client : NSObject {
         let request = NSMutableURLRequest(URL: url)
         var jsonifyError: NSError? = nil
         request.HTTPMethod = "POST"
+        /* Add Parse API details if required, use stripChars to identify (5 = Udacity, 0 = Parse), should probably use flag. */
+        if stripChars == 0 {
+            request.addValue(Client.Constants.ParseAppId,
+                forHTTPHeaderField: "X-Parse-Application-Id")
+            request.addValue(Client.Constants.ParseRESTApiKey,
+                forHTTPHeaderField: "X-Parse-REST-API-Key")
+        }
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.HTTPBody = NSJSONSerialization.dataWithJSONObject(jsonBody, options: nil, error: &jsonifyError)
@@ -87,7 +91,6 @@ class Client : NSObject {
                 let modData = data.subdataWithRange(NSMakeRange(stripChars, data.length - stripChars))
                 /* Complete parse */
                 Client.parseJSONWithCompletionHandler(modData, completionHandler: completionHandler)
-                println("parse complete")
             }
         }
         

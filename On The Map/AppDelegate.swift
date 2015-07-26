@@ -14,8 +14,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     // Temporary Storage of Student Details
-    var activeStudent: OTMStudent? = nil
-    var students: [OTMStudent]? = nil
+    var activeStudent: OTMStudent?
+    var students: [OTMStudent]?
     var studentOnTheMap: Bool = false
 
 

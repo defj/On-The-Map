@@ -19,6 +19,7 @@ struct OTMStudent: Printable {
     var mediaURL: String? = nil
     var latitude: Float? = nil
     var longitude: Float? = nil
+    var registered: Bool? = nil
     
     //Student Object
     init(dictionary: [String: AnyObject]?){
@@ -46,6 +47,9 @@ struct OTMStudent: Printable {
             }
             if let longitude = dictionary["longitude"] as? Float{
                 self.longitude = longitude
+            }
+            if let registered = dictionary["registered"] as? Bool{
+                self.registered = registered
             }
         }
     }

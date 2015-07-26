@@ -77,8 +77,7 @@ class ParseClient : Client {
             }
         }
     }
-    
-    
+
     // Mark: - Shared Instance
     class func sharedInstance() -> ParseClient {
         struct Singleton {

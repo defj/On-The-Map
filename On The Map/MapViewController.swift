@@ -16,6 +16,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     var applicationDelegate: AppDelegate?
     var uniqueKey: String?
+    var onTheMap: Bool = false
     
     override func viewDidLoad() {
         applicationDelegate = UIApplication.sharedApplication().delegate as? AppDelegate
@@ -33,16 +34,12 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         let refreshButton = UIBarButtonItem(barButtonSystemItem: .Refresh, target: self, action: Selector("getStudents"))
         self.navigationItem.rightBarButtonItem = refreshButton
         
-        //        var pinButton: UIButton = UIButton()
-        //        pinButton.setImage(UIImage(named: "Pin"), forState: .Normal)
-        //        pinButton.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-        //        pinButton.targetForAction(Selector("addPin"), withSender: nil)
-        //        let addPinButton = UIBarButtonItem()
-        //        addPinButton.customView = pinButton
-        let addPinButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.Add, target: self, action: Selector("addPin"))
+        var pinImage = UIImage(named: "Pin")
+        pinImage = pinImage?.imageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal)
+        let addPinButton = UIBarButtonItem(image: pinImage, style: UIBarButtonItemStyle.Plain, target: self, action: Selector("addPin"))
         self.navigationItem.rightBarButtonItems?.append(addPinButton)
         
-        let cancelButton = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: Selector("logout"))
+        let cancelButton = UIBarButtonItem(title: "Logout", style: UIBarButtonItemStyle.Plain, target: self, action: Selector("logout"))
         self.navigationItem.leftBarButtonItem = cancelButton
     }
     
@@ -51,17 +48,37 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         getStudents()
     }
     
+    // MARK: - Helpers
+    
+    // Adds a pin to the Student List
+    func addPin() {
+        // Allow pin to be added
+        onTheMap = true
+        var storyboard = UIStoryboard(name: "Main", bundle: nil)
+        var infoPost = storyboard.instantiateViewControllerWithIdentifier("InfoPostingController") as? UINavigationController
+        self.presentViewController(infoPost!, animated: true, completion: nil)
+    }
+    
+    // Logs the user out and returns to the login screen.
+    func logout(){
+        let logoutController = presentingViewController as? LoginViewController
+        logoutController?.passwordField.text = ""
+        applicationDelegate?.students = nil
+        applicationDelegate?.activeStudent = nil
+        self.presentingViewController?.dismissViewControllerAnimated(true, completion: nil )
+    }
+    
+    
     func getStudents() {
+        // Let the user know we are doing something
         activityIndicator.startAnimating()
         
         let client = ParseClient.sharedInstance()
         // Retrieve student data from Parse
-        println("Getting student details")
         client.getStudentDetails(){success, students, errorString in
             if success {
                 if let students = students {
                     // Store student details in the AppDelegate
-                    println("Storing Details")
                     if let applicationDelegate = self.applicationDelegate{
                         var allStudents: [OTMStudent] = [OTMStudent]()
                         for student in students {
@@ -84,7 +101,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     }
                 }
             } else {
-                self.displayAlert("Error", message: errorString, action: "OK")
+                self.displayAlert("Error", message: errorString, action: "Dismiss")
             }
             
         }
@@ -92,7 +109,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     }
         
     func addAnnotationsToMap() {
-        println("Adding Annotations")
         dispatch_async(dispatch_get_main_queue()){
             if let allStudents = self.applicationDelegate?.students{
                 var annotations = [MKAnnotation]()
@@ -116,12 +132,12 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 }
                 // When the array is complete, we add the annotations to the map.
                 if annotations.count <= 0 {
-                    self.displayAlert("Alert", message: "No annotations avaliable", action: "OK")
+                    self.displayAlert("Alert", message: "No annotations avaliable", action: "Dismiss")
                 } else {
                     self.mapView.addAnnotations(annotations)
                 }
             } else {
-                self.displayAlert("Error", message: "Unable to retrieve student data", action: "OK")
+                self.displayAlert("Error", message: "Unable to retrieve student data", action: "Dismiss")
             }
         }
 

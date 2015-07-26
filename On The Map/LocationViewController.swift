@@ -37,7 +37,7 @@ class LocationViewController: UIViewController, UITextFieldDelegate {
         
         // Check that location has been entered
         if locationField.text.isEmpty{
-            displayAlert("Error", message: "Please enter a location.", action: "OK")
+            displayAlert("Error", message: "Please enter a location.", action: "Dismiss")
             return
         }
         
@@ -46,41 +46,46 @@ class LocationViewController: UIViewController, UITextFieldDelegate {
         geocoder.geocodeAddressString(locationField.text){
             placemark, error in
             if let error = error {
-                self.displayAlert("Error", message: error.localizedDescription, action: "OK")
+                self.displayAlert("Error", message: error.localizedDescription, action: "Dismiss")
                 return
             }
             
+            // Let the user know we are working
             self.activityIndicator.startAnimating()
             
             if let appDelegate = self.applicationDelegate {
-                if let placemark = placemark as? [CLPlacemark]{
+                if let placemark = placemark as? [CLPlacemark] {
                     if placemark.count > 0 {
                         let placemark = placemark.first!
-                        if let country = placemark.country, state = placemark.administrativeArea{
-                            if let city = placemark.locality{
-                                appDelegate.activeStudent?.mapString = "\(city), \(state), \(country)"
-                                appDelegate.activeStudent?.latitude = Float(placemark.location.coordinate.latitude)
-                                appDelegate.activeStudent?.longitude = Float(placemark.location.coordinate.longitude)
-                                self.displayView(appDelegate.activeStudent?.mapString,lat: appDelegate.activeStudent?.latitude,lon: appDelegate.activeStudent?.longitude)
-                                self.stopActivity()
+                        if let country = placemark.country, state = placemark.administrativeArea {
+                            // Store Latitude and longitude
+                            let lat = Float(placemark.location.coordinate.latitude)
+                            appDelegate.activeStudent?.latitude = lat
+                            let long = Float(placemark.location.coordinate.longitude)
+                            appDelegate.activeStudent?.longitude = long
+                            
+                            // Store the mapString
+                            var mapString: String?
+                            if let city = placemark.locality {
+                                mapString = "\(city), \(state), \(country)"
                             } else {
-                                appDelegate.activeStudent?.mapString = "\(state), \(country)"
-                                appDelegate.activeStudent?.latitude = Float(placemark.location.coordinate.latitude)
-                                appDelegate.activeStudent?.longitude = Float(placemark.location.coordinate.longitude)
-                                self.displayView(appDelegate.activeStudent?.mapString,lat: nil,lon: nil)
-                                self.stopActivity()
+                                mapString = "\(state), \(country)"
                             }
+                            appDelegate.activeStudent?.mapString = mapString
+                            
+                            self.displayView(mapString)
+                            self.stopActivity()
                         } else {
-                            self.displayAlert("Error", message:"Could not find location: Please be more specific", action: "OK")
+                            self.displayAlert("Error", message:"Could not find location: Please be more specific", action: "Dismiss")
                         }
                     } else {
-                        self.displayAlert("Error", message:"Unable to find location", action: "OK")
+                        self.displayAlert("Error", message:"Unable to find location", action: "Dismiss")
                     }
                 } else {
-                    self.displayAlert("Error", message:"Unable to find locations", action: "OK")
+                    self.displayAlert("Error", message:"Unable to find locations", action: "Dismiss")
                 }
             } else {
-                self.displayAlert("Error", message: "Unable to access application delegate", action: "OK")
+                self.displayAlert("Error", message: "Unable to access application delegate", action: "Dismiss")
             }
         }
     }
@@ -114,20 +119,18 @@ class LocationViewController: UIViewController, UITextFieldDelegate {
             self.activityIndicator.stopAnimating()
             
             var alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: action, style: .Default, handler: { action in
-                self.dismissViewControllerAnimated(true, completion: nil)
-            }))
+            alert.addAction(UIAlertAction(title: action, style: .Default, handler: nil))
             self.presentViewController(alert, animated: true, completion: nil)
         }
     }
     
     // Display viewController
-    func displayView(mapString: String?, lat: Float?, lon: Float?) {
+    func displayView(mapString: String?) {
         dispatch_async(dispatch_get_main_queue()){
             if mapString != nil {
                 self.performSegueWithIdentifier("showAddLinkViewController", sender: self)
             } else {
-                self.displayAlert("Error", message: "Could not find location: Please try again", action: "OK")
+                self.displayAlert("Error", message: "Could not find location: Please try again", action: "Dismiss")
             }
         }
     }
@@ -136,9 +139,9 @@ class LocationViewController: UIViewController, UITextFieldDelegate {
     func showLocation(mapString: String?, lat: Float?, lon: Float?) {
         dispatch_async(dispatch_get_main_queue()){
             if mapString != nil {
-                self.performSegueWithIdentifier("showLinkController", sender: self)
+                self.performSegueWithIdentifier("showAddLinkViewController", sender: self)
             } else {
-                self.displayAlert("Error", message: "Could not find location: Please try again.", action: "OK")
+                self.displayAlert("Error", message: "Could not find location: Please try again.", action: "Dismiss")
             }
         }
     }
@@ -166,20 +169,6 @@ class LocationViewController: UIViewController, UITextFieldDelegate {
             self.view.frame.origin.y += getKeyboardHeight(notification) - 20
         }
     }
-    
-
-    
-//    func keyboardDidShow(notification: NSNotification){
-//        if self.view.frame.origin.y == 0 {
-//            view.frame.origin.y =
-//                -(locationField.frame.origin.y - topLayoutGuide.length  )
-//        }
-//    }
-//    
-//    func keyboardWillHide(notification: NSNotification){
-//        //Move view back in position
-//        self.view.frame.origin.y = 0.0
-//    }
     
     func getKeyboardHeight(notification: NSNotification) -> CGFloat {
         let userInfo = notification.userInfo

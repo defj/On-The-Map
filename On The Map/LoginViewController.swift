@@ -22,9 +22,13 @@ class LoginViewController: UIViewController {
     @IBOutlet weak var loginButton: UIButton!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
+    var applicationDelegate: AppDelegate?
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        applicationDelegate = UIApplication.sharedApplication().delegate as? AppDelegate
         activityIndicator.hidesWhenStopped = true
     }
 
@@ -33,22 +37,35 @@ class LoginViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
+    @IBAction func signUpTouch(sender: AnyObject) {
+        UIApplication.sharedApplication().openURL(NSURL(string: "https://www.udacity.com/account/auth#!/signup")!)
+    }
 
     @IBAction func loginButtonTouch(sender: AnyObject) {
         self.loginButton.enabled = false
-        self.debugLabel.text = "Connecting ..."
+        //self.debugLabel.text = "Connecting ..."
         self.activityIndicator.startAnimating()
         
         // Error check input
         if (self.usernameField.text == "" ||
             self.passwordField.text == "") {
-                displayError(("Enter your username and password"))
+                self.displayAlert("Error", message: "Please enter a username and password", action: "Dismiss")
         } else {
             UdacityClient.sharedInstance().authenticateWithViewController(self, username: self.usernameField.text, password: self.passwordField.text) { (success, errorString) in
                 if success {
+                    // Store the active student details
+                    var studentData = [String: AnyObject]()
+                    studentData["uniqueKey"] = UdacityClient.sharedInstance().userKey
+                    studentData["firstName"] = UdacityClient.sharedInstance().firstName
+                    studentData["lastName"] = UdacityClient.sharedInstance().lastName
+                    studentData["registered"] = UdacityClient.sharedInstance().registered
+                    studentData["uniqueKey"] = UdacityClient.sharedInstance().userKey
+                    if let applicationDelegate = self.applicationDelegate {
+                        applicationDelegate.activeStudent = OTMStudent(dictionary: studentData)
+                    }
                     self.completeLogin()
                 } else {
-                    self.displayError(errorString)
+                    self.displayAlert("Error", message: errorString, action: "Dismiss")
                 }
             }
         }
@@ -57,15 +74,12 @@ class LoginViewController: UIViewController {
     
     func completeLogin() {
         dispatch_async(dispatch_get_main_queue(), {
-            self.debugLabel.text = "Login Success"
             self.loginButton.enabled = true
             self.activityIndicator.stopAnimating()
             
             let controller = self.storyboard!.instantiateViewControllerWithIdentifier("OTMTabBarController") as! UITabBarController
             self.presentViewController(controller, animated: true, completion: nil)
         })
-        println("login success")
-        
     }
     
     func displayError(errorString: String?) {
@@ -77,6 +91,24 @@ class LoginViewController: UIViewController {
         
         // Reset buttons and fields
         self.loginButton.enabled = true
+        self.activityIndicator.stopAnimating()
+    }
+    
+    // Display a UIAlert Controller
+    func displayAlert(title: String? , message: String?, action: String) {
+        dispatch_async(dispatch_get_main_queue()){
+            self.activityIndicator.stopAnimating()
+            
+            var alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: action, style: .Default, handler: { action in
+                self.dismissViewControllerAnimated(true, completion: nil)
+            }))
+            self.presentViewController(alert, animated: true, completion: nil)
+        }
+        
+        // Reset buttons and fields
+        self.loginButton.enabled = true
+        self.debugLabel.text = ""
         self.activityIndicator.stopAnimating()
     }
 }

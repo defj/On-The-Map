@@ -16,24 +16,25 @@ class UdacityClient : Client {
     var userKey : String? = nil
     var firstName : String? = nil
     var lastName : String? = nil
+    var registered : Bool? = false
 
     // MARK: - Authentication
     func authenticateWithViewController(hostViewController: UIViewController, username: String, password: String,  completionHandler: (success: Bool, errorString: String?) -> Void) {
         
         /* Chain completion handlers for each request so that they run one after the other */
-        self.getSessionAndUser(username, password: password) { (success, sessionID, userKey, errorString) in
+        self.getSessionAndUser(username, password: password) { (success, sessionID, userKey, registered, errorString) in
             
             if success {
                 /* Login successful */
                 self.sessionID = sessionID
                 self.userKey = userKey
+                self.registered = registered
                 
                 /* Get First and Last Name */
                 self.getUserDetails() { (success, firstName, lastName, errorString) in
                     if success {
                         self.lastName = lastName
                         self.firstName = firstName
-                        println(firstName! + " " + lastName!)
                     }
                     
                     completionHandler(success: success, errorString: errorString)
@@ -44,7 +45,7 @@ class UdacityClient : Client {
         }
     }
     
-    func getSessionAndUser(username: String, password: String, completionHandler: (success: Bool, sessionID: String?, userKey: String?, errorString: String?) -> Void) {
+    func getSessionAndUser(username: String, password: String, completionHandler: (success: Bool, sessionID: String?, userKey: String?, registered: Bool?, errorString: String?) -> Void) {
         
         let jsonBody : [String:AnyObject] = [
             UdacityClient.JSONBodyKeys.Udacity: [UdacityClient.JSONBodyKeys.Username: username, UdacityClient.JSONBodyKeys.Password: password]
@@ -58,24 +59,34 @@ class UdacityClient : Client {
             
             /* 3. Send the desired value(s) to completion handler */
             if let error = error {
-                completionHandler(success: false, sessionID: nil, userKey: nil, errorString: "Login Failed (Session ID 1).")
+                completionHandler(success: false, sessionID: nil, userKey: nil, registered: nil, errorString: "Login Failed")
             } else {
                 /* Get the Session Id */
                 if let sessionDetails = JSONResult.valueForKey(UdacityClient.JSONResponseKeys.Session) as? NSDictionary {
                     if let sessionID = sessionDetails[UdacityClient.JSONResponseKeys.SessionId] as? String {
                         /* Now get the user key */
                         if let userDetails = JSONResult.valueForKey(UdacityClient.JSONResponseKeys.Account) as? NSDictionary {
-                            if let userKey = userDetails[UdacityClient.JSONResponseKeys.AccountKey] as? String {
-                                completionHandler(success: true, sessionID: sessionID, userKey: userKey, errorString: nil)
+                            if let registered = userDetails[UdacityClient.JSONResponseKeys.AccountRegistered] as? Bool {
+                                if registered {
+                                    if let userKey = userDetails[UdacityClient.JSONResponseKeys.AccountKey] as? String {
+                                        completionHandler(success: true, sessionID: sessionID, userKey: userKey, registered: registered, errorString: nil)
+                                    } else {
+                                        completionHandler(success: true, sessionID: sessionID, userKey: nil, registered: registered, errorString: "Login Failed (User Key Not Found).")
+                                    }
+                                } else {
+                                    completionHandler(success: true, sessionID: sessionID, userKey: nil, registered: nil, errorString: "Login Failed (User Not Registered.")
+                                }
+                            } else {
+                                completionHandler(success: true, sessionID: sessionID, userKey: nil, registered: nil, errorString: "Login Failed (User Registration Not Found).")
                             }
                         } else {
-                            completionHandler(success: false, sessionID: sessionID, userKey: nil, errorString: "Login Failed (User Key Not Found).")
+                            completionHandler(success: true, sessionID: sessionID, userKey: nil, registered: nil, errorString: "Login Failed (Account Details Not Found).")
                         }
                     } else {
-                        completionHandler(success: false, sessionID: nil, userKey: nil, errorString: "Login Failed (Session ID).")
+                        completionHandler(success: false, sessionID: nil, userKey: nil, registered: nil, errorString: "Login Failed (Invalid Session).")
                     }
                 } else {
-                    completionHandler(success: false, sessionID: nil, userKey:nil, errorString: "Login Failed (Session ID 2).")
+                    completionHandler(success: false, sessionID: nil, userKey:nil, registered: nil, errorString: "Login Failed (Invalid Username or Password).")
                 }
             }
         }
