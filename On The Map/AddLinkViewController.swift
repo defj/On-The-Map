@@ -137,4 +137,21 @@ class AddLinkViewController: UIViewController, UITextFieldDelegate {
         } else { return false }
     }
     
+    //MARK: - User Interface
+    
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        
+        if linkField.isFirstResponder() && linkField.text.isEmpty == false {
+            linkField.resignFirstResponder()
+        }
+        
+        return false
+    }
+    
+    override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
+        if linkField.isFirstResponder() {
+            linkField.resignFirstResponder()
+        }
+    }
+    
 }

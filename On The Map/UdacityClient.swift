@@ -71,16 +71,16 @@ class UdacityClient : Client {
                                     if let userKey = userDetails[UdacityClient.JSONResponseKeys.AccountKey] as? String {
                                         completionHandler(success: true, sessionID: sessionID, userKey: userKey, registered: registered, errorString: nil)
                                     } else {
-                                        completionHandler(success: true, sessionID: sessionID, userKey: nil, registered: registered, errorString: "Login Failed (User Key Not Found).")
+                                        completionHandler(success: false, sessionID: nil, userKey: nil, registered: nil, errorString: "Login Failed (User Key Not Found).")
                                     }
                                 } else {
-                                    completionHandler(success: true, sessionID: sessionID, userKey: nil, registered: nil, errorString: "Login Failed (User Not Registered.")
+                                    completionHandler(success: false, sessionID: nil, userKey: nil, registered: nil, errorString: "Login Failed (User Not Registered.")
                                 }
                             } else {
-                                completionHandler(success: true, sessionID: sessionID, userKey: nil, registered: nil, errorString: "Login Failed (User Registration Not Found).")
+                                completionHandler(success: false, sessionID: nil, userKey: nil, registered: nil, errorString: "Login Failed (User Registration Not Found).")
                             }
                         } else {
-                            completionHandler(success: true, sessionID: sessionID, userKey: nil, registered: nil, errorString: "Login Failed (Account Details Not Found).")
+                            completionHandler(success: false, sessionID: nil, userKey: nil, registered: nil, errorString: "Login Failed (Account Details Not Found).")
                         }
                     } else {
                         completionHandler(success: false, sessionID: nil, userKey: nil, registered: nil, errorString: "Login Failed (Invalid Session).")
@@ -123,7 +123,33 @@ class UdacityClient : Client {
 
     }
     
+    func logout(completionHandler: (success: Bool, errorString: String?) -> Void) {
+        /* Build URL */
+        let methodURL = Constants.UdacityBaseURL + Methods.Session
+        
+        /* Make the request */
+        let task = taskForDELETEMethod(methodURL, stripChars: Constants.UdacityStripChars) { JSONResult, error in
+            
+            /* 3. Send the desired value(s) to completion handler */
+            if let error = error {
+                completionHandler(success: false, errorString: "Logout Failed")
+            } else {
+                /* Get the Session Id */
+                if let sessionDetails = JSONResult.valueForKey(UdacityClient.JSONResponseKeys.Session) as? NSDictionary {
+                    if let sessionID = sessionDetails[UdacityClient.JSONResponseKeys.SessionId] as? String {
+                        completionHandler(success: true, errorString: nil)
+                    } else {
+                        completionHandler(success: false, errorString: "Logout Failed (Invalid Session ID).")
+                    }
+                } else {
+                    completionHandler(success: false, errorString: "Logout Failed (Invalid Response).")
+                }
+            }
+        }
+    }
     
+    
+
     // Mark: - Shared Instance
     class func sharedInstance() -> UdacityClient {
         struct Singleton {

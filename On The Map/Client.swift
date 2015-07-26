@@ -100,6 +100,45 @@ class Client : NSObject {
         return task
     }
     
+    // MARK: - DELETE
+    
+    func taskForDELETEMethod(methodURL: String, stripChars: Int, completionHandler: (result: AnyObject!, error: NSError?) -> Void) -> NSURLSessionDataTask {
+        /* Build the URL and configure the request */
+        let urlString = methodURL
+        let url = NSURL(string: urlString)!
+        let request = NSMutableURLRequest(URL: url)
+        
+        request.HTTPMethod = "DELETE"
+        var xsrfCookie: NSHTTPCookie? = nil
+        let sharedCookieStorage = NSHTTPCookieStorage.sharedHTTPCookieStorage()
+        for cookie in sharedCookieStorage.cookies as! [NSHTTPCookie] {
+            if cookie.name == "XSRF-TOKEN" { xsrfCookie = cookie }
+        }
+        if let xsrfCookie = xsrfCookie {
+            request.addValue(xsrfCookie.value!, forHTTPHeaderField: "X-XSRF-Token")
+        }
+        
+        /* Make the request */
+        let task = session.dataTaskWithRequest(request) {data, response, downloadError in
+            
+            /* Parse the data and use the data (happens in completion handler) */
+            if let error = downloadError {
+                let newError = Client.errorForData(data, response: response, error: error)
+                completionHandler(result: nil, error: downloadError)
+            } else {
+                /* Strip leading characters if required */
+                let modData = data.subdataWithRange(NSMakeRange(stripChars, data.length - stripChars))
+                /* Complete parse */
+                Client.parseJSONWithCompletionHandler(modData, completionHandler: completionHandler)
+            }
+        }
+        
+        /* Start the request */
+        task.resume()
+        
+        return task
+    }
+    
     // MARK: - Helpers
     
     /* Helper: Given a response with error, see if a status_message is returned, otherwise return the previous error */

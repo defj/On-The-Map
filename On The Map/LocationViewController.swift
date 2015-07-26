@@ -21,7 +21,7 @@ class LocationViewController: UIViewController, UITextFieldDelegate {
         super.viewWillAppear(animated)
         
         // Subscribe to keyboard notifications to allow the view to raise when necessary
-        self.subscribeToKeyboardNotifications()
+        subscribeToKeyboardNotifications()
     }
     
     override func viewDidLoad() {

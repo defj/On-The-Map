@@ -61,11 +61,19 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     // Logs the user out and returns to the login screen.
     func logout(){
-        let logoutController = presentingViewController as? LoginViewController
-        logoutController?.passwordField.text = ""
-        applicationDelegate?.students = nil
-        applicationDelegate?.activeStudent = nil
-        self.presentingViewController?.dismissViewControllerAnimated(true, completion: nil )
+        // Delete current sesssion
+        UdacityClient.sharedInstance().logout() { (success, errorString) in
+            if success {
+                // Dismiss view and clear shared values
+                let logoutController = self.presentingViewController as? LoginViewController
+                logoutController?.passwordField.text = ""
+                self.applicationDelegate?.students = nil
+                self.applicationDelegate?.activeStudent = nil
+                self.presentingViewController?.dismissViewControllerAnimated(true, completion: nil )
+            } else {
+                self.displayAlert("Error", message: errorString, action: "Dismiss")
+            }
+        }
     }
     
     
@@ -149,9 +157,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             self.activityIndicator.stopAnimating()
             
             var alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: action, style: .Default, handler: { action in
-                self.dismissViewControllerAnimated(true, completion: nil)
-            }))
+            alert.addAction(UIAlertAction(title: action, style: .Default, handler: nil))
             self.presentViewController(alert, animated: true, completion: nil)
         }
     }
