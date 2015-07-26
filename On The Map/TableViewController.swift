@@ -123,9 +123,17 @@ class TableViewController: UITableViewController {
         }
     }
     
-    //MARK: - TableView Data Source Methods
+    //MARK: - TableView  Methods
+    
+    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+        return 1
+    }
+    
+    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return self.students.count
+    }
+    
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        
         let cell =
         tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath) as! UITableViewCell
         
@@ -137,31 +145,19 @@ class TableViewController: UITableViewController {
             if let location = student.mapString {
                 cell.detailTextLabel?.text = location
             }
-            
         }
         
         return cell
     }
-    
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.students.count
-    }
-    
-    //MARK: - TableView Delegate Methods
+
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         if let urlString = self.students![indexPath.row].mediaURL, cell = tableView.cellForRowAtIndexPath(indexPath) {
-            cell.detailTextLabel?.text = urlString
+            UIApplication.sharedApplication().openURL(NSURL(string: urlString)!)
+        } else {
+            self.displayAlert("Missing URL", message: "No URL was found for the selected student, please try another", action: "Dismiss")
         }
     }
-    
-    override func tableView(tableView: UITableView, didDeselectRowAtIndexPath indexPath: NSIndexPath) {
-        if let allStudents = self.students {
-            if let mapString = allStudents[indexPath.row].mapString, cell = tableView.cellForRowAtIndexPath(indexPath) {
-                cell.detailTextLabel?.text = mapString
-            }
-        }
-    }
-    
+
     override func tableView(tableView: UITableView, accessoryButtonTappedForRowWithIndexPath indexPath: NSIndexPath) {
         if let allStudents = self.students {
             if let urlString = allStudents[indexPath.row].mediaURL{

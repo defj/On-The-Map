@@ -46,28 +46,33 @@ class LoginViewController: UIViewController {
         //self.debugLabel.text = "Connecting ..."
         self.activityIndicator.startAnimating()
         
-        // Error check input
-        if (self.usernameField.text == "" ||
-            self.passwordField.text == "") {
-                self.displayAlert("Error", message: "Please enter a username and password", action: "Dismiss")
-        } else {
-            UdacityClient.sharedInstance().authenticateWithViewController(self, username: self.usernameField.text, password: self.passwordField.text) { (success, errorString) in
-                if success {
-                    // Store the active student details
-                    var studentData = [String: AnyObject]()
-                    studentData["uniqueKey"] = UdacityClient.sharedInstance().userKey
-                    studentData["firstName"] = UdacityClient.sharedInstance().firstName
-                    studentData["lastName"] = UdacityClient.sharedInstance().lastName
-                    studentData["registered"] = UdacityClient.sharedInstance().registered
-                    studentData["uniqueKey"] = UdacityClient.sharedInstance().userKey
-                    if let applicationDelegate = self.applicationDelegate {
-                        applicationDelegate.activeStudent = OTMStudent(dictionary: studentData)
+        // Check network connection
+        if NetworkClient.isConnectedToNetwork() {
+            // Error check input
+            if (self.usernameField.text == "" ||
+                self.passwordField.text == "") {
+                    self.displayAlert("Error", message: "Please enter a username and password", action: "Dismiss")
+            } else {
+                UdacityClient.sharedInstance().authenticateWithViewController(self, username: self.usernameField.text, password: self.passwordField.text) { (success, errorString) in
+                    if success {
+                        // Store the active student details
+                        var studentData = [String: AnyObject]()
+                        studentData["uniqueKey"] = UdacityClient.sharedInstance().userKey
+                        studentData["firstName"] = UdacityClient.sharedInstance().firstName
+                        studentData["lastName"] = UdacityClient.sharedInstance().lastName
+                        studentData["registered"] = UdacityClient.sharedInstance().registered
+                        studentData["uniqueKey"] = UdacityClient.sharedInstance().userKey
+                        if let applicationDelegate = self.applicationDelegate {
+                            applicationDelegate.activeStudent = OTMStudent(dictionary: studentData)
+                        }
+                        self.completeLogin()
+                    } else {
+                        self.displayAlert("Error", message: errorString, action: "Dismiss")
                     }
-                    self.completeLogin()
-                } else {
-                    self.displayAlert("Error", message: errorString, action: "Dismiss")
                 }
             }
+        } else {
+            self.displayAlert("Error", message: "No network connection available", action: "Dismiss")
         }
     }
 
